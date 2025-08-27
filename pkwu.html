@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Rame</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #fdfdfd;
+        }
+
+        header {
+            background: #e63946;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 10px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        .product-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .product {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            width: 220px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .product img {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        button, .checkout-btn {
+            background-color: #1d3557;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        button:hover, .checkout-btn:hover {
+            background-color: #457b9d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        form input, form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h3, h2 {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🍜 Ramen</h1>
+        <nav>
+            <a href="#" onclick="showPage('menu')">Beranda</a>
+            <a href="#" onclick="showPage('cart')">Keranjang</a>
+            <a href="#" onclick="showPage('checkout')">Checkout</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Menu -->
+        <section id="menuPage">
+            <h2>Menu Ramen</h2>
+            <div class="product-list">
+                <div class="product">
+                    <img src="img/45_d115125d-8365-4865-af0e-5a8f42b577af_1600x.webp" alt="Ramen Original">
+                    <h3>Ramen Original</h3>
+                    <p>Rp25.000</p>
+                    <button onclick="addToCart('Ramen Original', 25000)">Tambah ke Keranjang</button>
+                </div>
+                <div class="product">
+                    <img src="img\Resep-ramen-jepang.jpg" alt="Ramen Pedas">
+                    <h3>Ramen Pedas</h3>
+                    <p>Rp30.000</p>
+                    <button onclick="addToCart('Ramen Pedas', 30000)">Tambah ke Keranjang</button>
+                </div>
+                <div class="product">
+                    <img src="img\SlowCookerCurryBeefRamen_12.jpg" alt="Ramen Kari Jepang">
+                    <h3>Ramen Kari Jepang</h3>
+                    <p>Rp35.000</p>
+                    <button onclick="addToCart('Ramen Kari Jepang', 35000)">Tambah ke Keranjang</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Keranjang -->
+        <section id="cartPage" class="hidden">
+            <h2>🛒 Keranjang Belanja</h2>
+            <table id="cartTable">
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Jumlah</th>
+                        <th>Harga</th>
+                        <th>Subtotal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <h3 id="total">Total: Rp0</h3>
+            <button class="checkout-btn" onclick="showPage('checkout')">Lanjut ke Checkout</button>
+        </section>
+
+        <!-- Checkout -->
+        <section id="checkoutPage" class="hidden">
+            <h2>📦 Checkout</h2>
+            <form onsubmit="submitOrder(event)">
+                <label>Nama Lengkap:</label><br>
+                <input type="text" id="nama" required><br><br>
+
+                <label>Alamat Pengiriman:</label><br>
+                <textarea id="alamat" required></textarea><br><br>
+
+                <label>No. HP:</label><br>
+                <input type="tel" id="hp" required><br><br>
+
+                <button type="submit">Kirim Pesanan</button>
+            </form>
+        </section>
+
+        <!-- Ringkasan Pesanan -->
+        <section id="orderSummaryPage" class="hidden">
+            <h2>✅ Pesanan Berhasil</h2>
+            <h3>Informasi Pemesan:</h3>
+            <p><strong>Nama:</strong> <span id="summaryNama"></span></p>
+            <p><strong>Alamat:</strong> <span id="summaryAlamat"></span></p>
+            <p><strong>No. HP:</strong> <span id="summaryHP"></span></p>
+
+            <h3>Daftar Pesanan:</h3>
+            <table id="summaryTable">
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Jumlah</th>
+                        <th>Harga</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <h3 id="summaryTotal">Total: Rp0</h3>
+        </section>
+    </main>
+
+    <script>
+        // Tambah ke keranjang
+        function addToCart(name, price) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existing = cart.find(item => item.name === name);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ name, price, qty: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(name + " ditambahkan ke keranjang!");
+        }
+
+        // Tampilkan halaman
+        function showPage(page) {
+            document.getElementById('menuPage').classList.add('hidden');
+            document.getElementById('cartPage').classList.add('hidden');
+            document.getElementById('checkoutPage').classList.add('hidden');
+            document.getElementById('orderSummaryPage').classList.add('hidden');
+
+            if (page === 'menu') {
+                document.getElementById('menuPage').classList.remove('hidden');
+            } else if (page === 'cart') {
+                document.getElementById('cartPage').classList.remove('hidden');
+                loadCart();
+            } else if (page === 'checkout') {
+                document.getElementById('checkoutPage').classList.remove('hidden');
+            } else if (page === 'summary') {
+                document.getElementById('orderSummaryPage').classList.remove('hidden');
+            }
+        }
+
+        // Load keranjang
+        function loadCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const tbody = document.querySelector("#cartTable tbody");
+            tbody.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                const subtotal = item.price * item.qty;
+                total += subtotal;
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.qty}</td>
+                    <td>Rp${item.price.toLocaleString()}</td>
+                    <td>Rp${subtotal.toLocaleString()}</td>
+                    <td><button onclick="removeItem(${index})">Hapus</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById("total").innerText = "Total: Rp" + total.toLocaleString();
+        }
+
+        // Hapus item
+        function removeItem(index) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        }
+
+                // Submit pesanan
+                function submitOrder(event) {
+            event.preventDefault();
+
+            const nama = document.getElementById("nama").value;
+            const alamat = document.getElementById("alamat").value;
+            const hp = document.getElementById("hp").value;
+
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // Tampilkan data pelanggan
+            document.getElementById("summaryNama").innerText = nama;
+            document.getElementById("summaryAlamat").innerText = alamat;
+            document.getElementById("summaryHP").innerText = hp;
+
+            // Tampilkan isi pesanan
+            const tbody = document.querySelector("#summaryTable tbody");
+            tbody.innerHTML = "";
+            let total = 0;
+
+            cart.forEach(item => {
+                const subtotal = item.price * item.qty;
+                total += subtotal;
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.qty}</td>
+                    <td>Rp${item.price.toLocaleString()}</td>
+                    <td>Rp${subtotal.toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById("summaryTotal").innerText = "Total: Rp" + total.toLocaleString();
+
+            // Kosongkan keranjang dan tampilkan ringkasan
+            localStorage.removeItem('cart');
+            showPage('summary');
+        }
+
+        // Tampilkan halaman menu saat pertama kali
+        showPage('menu');
+    </script>
+</body>
+</html>
